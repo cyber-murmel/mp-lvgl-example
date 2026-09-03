@@ -1,0 +1,171 @@
+/*
+ * Copyright (c) 2026 marble <marble@computer-in.love>
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#include <zephyr/dt-bindings/input/input-event-codes.h>
+#include <zephyr/dt-bindings/mipi_dbi/mipi_dbi.h>
+#include <zephyr/dt-bindings/pwm/pwm.h>
+
+#define MADCTL_ORDER_BGR (1<<3)
+#define MADCTL_SWAP_XY (1<<5)
+#define MADCTL_MIRROR_X (1<<6)
+#define MADCTL_MIRROR_Y (1<<7)
+
+/ {
+	chosen {
+		zephyr,display = &display;
+		zephyr,console = &cdc_acm_uart0;             /* in modules/zephyr/boards/seeed/xiao_esp32s3/xiao_esp32s3_procpu_common.dtsi:16 */
+		zephyr,shell-uart = &cdc_acm_uart0;          /* in modules/zephyr/boards/seeed/xiao_esp32s3/xiao_esp32s3_procpu_common.dtsi:17 */
+	};
+	
+	fstab {
+		compatible = "zephyr,fstab";
+
+		flash_ffs: flash_ffs {
+			compatible = "zephyr,fstab,fatfs";
+			//automount;
+			disk-access;
+			mount-point = "/FLASH:";
+		};
+
+		sd_ffs: sd_ffs {
+			compatible = "zephyr,fstab,fatfs";
+			//automount;
+			disk-access;
+			mount-point = "/SD:";
+		};
+	};
+
+	msc_disk0 {
+	 	status = "okay";
+	 	compatible = "zephyr,flash-disk";
+     	partition = <&storage_partition>;
+	 	disk-name = "FLASH"; /* IMPORTANT: Matches C code LUN definiton */
+	 	sector-size= <512>;
+	 	cache-size = <4096>;
+	};
+
+	mipi_dbi_spi {
+		compatible = "zephyr,mipi-dbi-spi";
+		spi-dev = <&spi2>;
+		dc-gpios = <&gpio0 2 GPIO_ACTIVE_HIGH>;
+		reset-gpios = <&gpio0 1 GPIO_ACTIVE_LOW>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		display: st7789v@0 {
+			compatible = "sitronix,st7789v";
+			reg = <0>;
+			mipi-max-frequency = <DT_FREQ_M(100)>;
+			mipi-mode = "MIPI_DBI_MODE_SPI_4WIRE";
+			width = <320>;
+			height = <240>;
+			x-offset = <0>;
+			y-offset = <0>;
+			vcom = <0x20>;
+			gctrl = <0x35>;
+			mdac = <0xA0>; /* RGB order, swap XY, mirror Y */
+			lcm = <0x2c>;
+			colmod = <0x55>; /* RGB565 16bit */
+			gamma = <0x01>;
+			porch-param = [0c 0c 00 33 33];
+			cmd2en-param = [5a 69 02 01];
+			pwctrl1-param = [a4 a1];
+			pvgam-param = [d0 00 02 07 0a 28 32 44 42 06 0e 12 14 17];
+			nvgam-param = [d0 00 02 07 0a 28 31 54 47 0e 1c 17 1b 1e];
+			ram-param = [00 f0];
+			rgb-param = [40 02 14];
+		};
+	};
+
+	encoder {
+		compatible = "zephyr,lvgl-encoder-input";
+		rotation-input-code = <INPUT_REL_WHEEL>;
+		button-input-code = <INPUT_KEY_0>;
+	};
+
+	qdec {
+        compatible = "gpio-qdec";
+        gpios = <&gpio0 4 (GPIO_PULL_UP | GPIO_ACTIVE_HIGH)>,
+                <&gpio0 5 (GPIO_PULL_UP | GPIO_ACTIVE_HIGH)>;
+        steps-per-period = <4>;
+        zephyr,axis = <INPUT_REL_WHEEL>;
+        sample-time-us = <2000>;
+        idle-timeout-ms = <200>;
+	};
+
+	buttons {
+		compatible = "gpio-keys";
+		button_0 {
+			gpios = <&gpio0 6 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			zephyr,code = <INPUT_KEY_0>;
+		};
+	};
+};
+
+&pinctrl {
+	ledc0_default: ledc0_default {
+		group1 {
+			pinmux = <LEDC_CH0_GPIO21>;
+			output-enable;
+		};
+	};
+};
+
+&ledc0 {
+	pinctrl-0 = <&ledc0_default>;
+	pinctrl-names = "default";
+	status = "okay";
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	channel0@0 {
+		reg = <0x0>;
+		timer = <0>;
+        inverted;
+	};
+};
+
+
+/delete-node/ &sdhc0;
+&spi2 {
+	status = "okay";
+	dma-enabled;
+	dmas = <&dma 0>, <&dma 1>;
+	dma-names = "rx", "tx";
+	cs-gpios = <&gpio0 3 GPIO_ACTIVE_LOW>, <&gpio1 12 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+
+	sdhc0: sdhc@1 {
+		compatible = "zephyr,sdhc-spi-slot";
+		reg = <1>;
+		status = "okay";
+		mmc {
+			compatible = "zephyr,sdmmc-disk";
+			disk-name = "SD";
+			status = "okay";
+		};
+		spi-max-frequency = <24000000>;
+	};
+
+};
+
+&dma {
+    status = "okay";
+};
+
+&i2c0 {
+	status = "disabled";
+};
+
+zephyr_udc0: &usb_otg {
+	status = "okay";
+	cdc_acm_uart0: cdc_acm_uart0 {
+			compatible = "zephyr,cdc-acm-uart";
+			label = "CDC_ACM_0";
+	};
+};
+
+&uart0{
+	status = "disabled";
+};

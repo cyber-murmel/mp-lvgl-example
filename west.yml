@@ -4,19 +4,41 @@
 manifest:
   self:
     west-commands: scripts/west-commands.yml
+    path: mp-lvgl-example
 
   remotes:
     - name: zephyrproject-rtos
       url-base: https://github.com/zephyrproject-rtos
+    - name: micropython
+      url-base: https://github.com/micropython
+    - name: lvgl
+      url-base: https://github.com/lvgl
+    - name: marble
+      url-base: https://github.com/cyber-murmel
 
   projects:
     - name: zephyr
-      remote: zephyrproject-rtos
-      revision: main
+      remote: marble
+      revision: 151046a633fbf08c2878e1c5f2be9227bc553abd
+      path: modules/zephyr
       import:
-        # By using name-allowlist we can clone only the modules that are
-        # strictly needed by the application.
         name-allowlist:
-          - cmsis_6    # required by the ARM port for Cortex-M
-          - hal_nordic # required by the custom_plank board (Nordic based)
-          - hal_stm32  # required by the nucleo_f302r8 board (STM32 based)
+          - hal_espressif
+          - mcuboot
+          - fatfs
+          - lvgl
+    - name: micropython
+      remote: micropython
+      revision: 9faaa837f47efe76b57e337e5d30e07fcd10be1a
+      path: modules/micropython
+    - name: lv_binding_micropython
+      remote: marble
+      revision: mp-lvgl
+      path: modules/lib/gui/lv_binding_micropython
+      import:
+        name-allowlist:
+          - pycparser
+    - name: micropython-lib
+      remote: micropython
+      revision: v1.29.0
+      path: modules/micropython/lib/micropython-lib

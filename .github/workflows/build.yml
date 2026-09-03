@@ -21,7 +21,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          path: example-application
+          path: mp-lvgl-example
           persist-credentials: false
 
       - name: Set up Python
@@ -32,12 +32,12 @@ jobs:
       - name: Setup Zephyr project
         uses: zephyrproject-rtos/action-zephyr-setup@be8136a8bba01580485d98b7ad2d32477c36a49a # v1.0.15
         with:
-          app-path: example-application
+          app-path: mp-lvgl-example
           toolchains: arm-zephyr-eabi
           ccache-cache-key: ${{ matrix.os }}
 
       - name: Build firmware
-        working-directory: example-application
+        working-directory: mp-lvgl-example
         shell: bash
         run: |
           if [ "${{ runner.os }}" = "Windows" ]; then
@@ -46,7 +46,7 @@ jobs:
           west twister -T app -v --inline-logs --integration $EXTRA_TWISTER_FLAGS
 
       - name: Twister Tests
-        working-directory: example-application
+        working-directory: mp-lvgl-example
         shell: bash
         run: |
           if [ "${{ runner.os }}" = "Windows" ]; then

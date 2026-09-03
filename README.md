@@ -1,4 +1,4 @@
-# Zephyr Example Application
+# Zephyr Example Application with MicroPython and LVGL
 
 <a href="https://github.com/zephyrproject-rtos/example-application/actions/workflows/build.yml?query=branch%3Amain">
   <img src="https://github.com/zephyrproject-rtos/example-application/actions/workflows/build.yml/badge.svg?event=push">
@@ -56,15 +56,15 @@ environment. Follow the official
 
 ### Initialization
 
-The first step is to initialize the workspace folder (``my-workspace``) where
-the ``example-application`` and all Zephyr modules will be cloned. Run the following
+The first step is to initialize the workspace folder (``mp-lvgl-example-ws``) where
+the ``mp-lvgl-example`` and all Zephyr modules will be cloned. Run the following
 command:
 
 ```shell
 # initialize my-workspace for the example-application (main branch)
-west init -m https://github.com/zephyrproject-rtos/example-application --mr main my-workspace
+west init -m https://github.com/zephyrproject-rtos/example-application --mr main mp-lvgl-example-ws
 # update Zephyr modules
-cd my-workspace
+cd mp-lvgl-example-ws
 west update
 ```
 
@@ -73,7 +73,7 @@ west update
 To build the application, run the following command:
 
 ```shell
-cd example-application
+cd mp-lvgl-example
 west build -b $BOARD app
 ```
 
